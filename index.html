@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Harmony Hub — Musical Instrument Store</title>
+    <meta name="description" content="Harmony Hub: A full-featured musical instrument store management system. Browse, add, and manage guitars, pianos, drums, and more." />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!--  NAVBAR                                                       -->
+<!-- ============================================================ -->
+<nav id="navbar" class="navbar hidden">
+    <div class="navbar-inner">
+        <a href="#dashboard" class="navbar-brand">
+            <span class="brand-icon">&#9835;</span>
+            <span class="brand-text">Harmony Hub</span>
+        </a>
+        <div class="navbar-right">
+            <span id="nav-user" class="nav-user"></span>
+            <button id="btn-logout" class="btn btn-outline btn-sm">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<!-- ============================================================ -->
+<!--  MAIN RENDER TARGET                                           -->
+<!-- ============================================================ -->
+<main id="app"></main>
+
+<!-- ============================================================ -->
+<!--  TOAST CONTAINER                                              -->
+<!-- ============================================================ -->
+<div id="toast-container"></div>
+
+<!-- ============================================================ -->
+<!--  LOADING OVERLAY                                              -->
+<!-- ============================================================ -->
+<div id="loading-overlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p class="loading-text">Connecting to server...</p>
+</div>
+
+<!-- ============================================================ -->
+<!--  NETWORK CONFIG PANEL                                         -->
+<!-- ============================================================ -->
+<div id="network-panel" class="network-panel">
+    <button id="net-toggle" class="net-toggle" title="Network settings">&#9881;</button>
+    <div id="net-body" class="net-body hidden">
+        <h4>Network Simulation</h4>
+        <label>
+            Packet Loss: <strong id="loss-val">20%</strong>
+            <input type="range" id="loss-slider" min="0" max="50" value="20" step="5" />
+        </label>
+        <label>
+            Min Delay: <strong id="min-delay-val">1s</strong>
+            <input type="range" id="min-delay-slider" min="500" max="3000" value="1000" step="250" />
+        </label>
+        <label>
+            Max Delay: <strong id="max-delay-val">3s</strong>
+            <input type="range" id="max-delay-slider" min="1000" max="5000" value="3000" step="250" />
+        </label>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!--  TEMPLATES                                                    -->
+<!-- ============================================================ -->
+
+<!-- LOGIN -->
+<template id="tpl-login">
+    <section class="auth-page">
+        <div class="auth-card">
+            <div class="auth-header">
+                <span class="auth-icon">&#9835;</span>
+                <h1>Welcome Back</h1>
+                <p>Sign in to manage your instrument catalog</p>
+            </div>
+            <form id="form-login" class="auth-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="login-user">Username</label>
+                    <input type="text" id="login-user" placeholder="Enter username" required minlength="3" />
+                </div>
+                <div class="form-group">
+                    <label for="login-pass">Password</label>
+                    <input type="password" id="login-pass" placeholder="Enter password" required minlength="4" />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+            </form>
+            <p class="auth-footer">
+                Don't have an account? <a href="#register">Create one</a>
+            </p>
+        </div>
+    </section>
+</template>
+
+<!-- REGISTER -->
+<template id="tpl-register">
+    <section class="auth-page">
+        <div class="auth-card">
+            <div class="auth-header">
+                <span class="auth-icon">&#9835;</span>
+                <h1>Create Account</h1>
+                <p>Join Harmony Hub and start managing instruments</p>
+            </div>
+            <form id="form-register" class="auth-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="reg-name">Full Name</label>
+                    <input type="text" id="reg-name" placeholder="Your full name" required />
+                </div>
+                <div class="form-group">
+                    <label for="reg-user">Username</label>
+                    <input type="text" id="reg-user" placeholder="Choose a username" required minlength="3" />
+                </div>
+                <div class="form-group">
+                    <label for="reg-pass">Password</label>
+                    <input type="password" id="reg-pass" placeholder="Choose a password" required minlength="4" />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Register</button>
+            </form>
+            <p class="auth-footer">
+                Already have an account? <a href="#login">Sign in</a>
+            </p>
+        </div>
+    </section>
+</template>
+
+<!-- DASHBOARD -->
+<template id="tpl-dashboard">
+    <section class="dashboard">
+        <header class="dash-header">
+            <div>
+                <h1>Instrument Catalog</h1>
+                <p class="subtitle">Browse and manage your musical inventory</p>
+            </div>
+            <div class="dash-actions">
+                <input type="text" id="search-input" class="search-input" placeholder="Search instruments..." />
+                <select id="filter-category" class="filter-select">
+                    <option value="">All Categories</option>
+                    <option value="Guitars">Guitars</option>
+                    <option value="Pianos">Pianos</option>
+                    <option value="Drums">Drums</option>
+                    <option value="Bass">Bass</option>
+                    <option value="Wind">Wind</option>
+                    <option value="Keyboards">Keyboards</option>
+                    <option value="Other">Other</option>
+                </select>
+                <a href="#add" class="btn btn-primary">+ Add Instrument</a>
+            </div>
+        </header>
+        <div id="instruments-grid" class="instruments-grid">
+            <!-- populated by JS -->
+        </div>
+    </section>
+</template>
+
+<!-- INSTRUMENT DETAIL -->
+<template id="tpl-detail">
+    <section class="detail-page">
+        <a href="#dashboard" class="back-link">&larr; Back to catalog</a>
+        <div class="detail-card">
+            <div class="detail-image-wrap">
+                <img id="detail-img" src="" alt="" class="detail-image" />
+            </div>
+            <div class="detail-info">
+                <span id="detail-category" class="badge"></span>
+                <h1 id="detail-name"></h1>
+                <p id="detail-description" class="detail-desc"></p>
+                <div class="detail-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Price</span>
+                        <span id="detail-price" class="meta-value price"></span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">In Stock</span>
+                        <span id="detail-stock" class="meta-value"></span>
+                    </div>
+                </div>
+                <div class="detail-actions">
+                    <a id="detail-edit" href="" class="btn btn-primary">Edit</a>
+                    <button id="detail-delete" class="btn btn-danger">Delete</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
+<!-- ADD / EDIT FORM -->
+<template id="tpl-form">
+    <section class="form-page">
+        <a href="#dashboard" class="back-link">&larr; Back to catalog</a>
+        <div class="form-card">
+            <h1 id="form-title">Add Instrument</h1>
+            <form id="instrument-form" autocomplete="off">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="f-name">Name</label>
+                        <input type="text" id="f-name" placeholder="Instrument name" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="f-category">Category</label>
+                        <select id="f-category" required>
+                            <option value="">Select category</option>
+                            <option value="Guitars">Guitars</option>
+                            <option value="Pianos">Pianos</option>
+                            <option value="Drums">Drums</option>
+                            <option value="Bass">Bass</option>
+                            <option value="Wind">Wind</option>
+                            <option value="Keyboards">Keyboards</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="f-price">Price ($)</label>
+                        <input type="number" id="f-price" placeholder="0.00" min="0" step="0.01" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="f-stock">Stock Quantity</label>
+                        <input type="number" id="f-stock" placeholder="0" min="0" required />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="f-image">Image URL</label>
+                    <input type="url" id="f-image" placeholder="https://..." />
+                </div>
+                <div class="form-group">
+                    <label for="f-desc">Description</label>
+                    <textarea id="f-desc" rows="4" placeholder="Describe the instrument..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="form-submit">Save Instrument</button>
+            </form>
+        </div>
+    </section>
+</template>
+
+<!-- INSTRUMENT CARD (reusable) -->
+<template id="tpl-card">
+    <article class="instrument-card">
+        <div class="card-img-wrap">
+            <img class="card-img" src="" alt="" loading="lazy" />
+        </div>
+        <div class="card-body">
+            <span class="badge card-badge"></span>
+            <h3 class="card-title"></h3>
+            <p class="card-desc"></p>
+            <div class="card-footer">
+                <span class="card-price"></span>
+                <span class="card-stock"></span>
+            </div>
+        </div>
+    </article>
+</template>
+
+<!-- ============================================================ -->
+<!--  APP SCRIPT (ES module)                                       -->
+<!-- ============================================================ -->
+<script type="module" src="js/app.js"></script>
+
+</body>
+</html>
