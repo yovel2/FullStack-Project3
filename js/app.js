@@ -16,6 +16,7 @@
 
 import { fajax } from './fajax.js';
 import Network from './network.js';
+import DB from './db.js';
 
 /* ========================================================= */
 /*  State                                                     */
@@ -503,7 +504,10 @@ function setupNetworkPanel() {
 /*  Boot                                                      */
 /* ========================================================= */
 
-function init() {
+async function init() {
+    // Initialize the DB (fetch seed data from external JSON if first visit)
+    await DB.init();
+
     setupLogout();
     setupNetworkPanel();
 

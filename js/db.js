@@ -14,100 +14,8 @@ const DB_KEYS = {
     INSTRUMENTS: 'harmony_instruments',
 };
 
-/* ---------- seed data (loaded on first visit) ---------- */
-
-const SEED_INSTRUMENTS = [
-    {
-        id: '1',
-        name: 'Fender Stratocaster',
-        category: 'Guitars',
-        price: 1299,
-        stock: 8,
-        description: 'Iconic electric guitar with a classic tone and comfortable neck profile.',
-        image: 'https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=400',
-    },
-    {
-        id: '2',
-        name: 'Yamaha U1 Upright Piano',
-        category: 'Pianos',
-        price: 5499,
-        stock: 3,
-        description: 'Professional upright piano with rich tonal quality and responsive action.',
-        image: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=400',
-    },
-    {
-        id: '3',
-        name: 'Pearl Export Drum Kit',
-        category: 'Drums',
-        price: 849,
-        stock: 5,
-        description: 'Complete 5-piece drum set ideal for gigging and studio recording.',
-        image: 'https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?w=400',
-    },
-    {
-        id: '4',
-        name: 'Gibson Les Paul Standard',
-        category: 'Guitars',
-        price: 2499,
-        stock: 4,
-        description: 'Legendary solid-body electric guitar with humbucker pickups and sustain for days.',
-        image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=400',
-    },
-    {
-        id: '5',
-        name: 'Roland FP-30X Digital Piano',
-        category: 'Pianos',
-        price: 749,
-        stock: 10,
-        description: 'Portable digital piano with weighted keys and built-in Bluetooth.',
-        image: 'https://images.unsplash.com/photo-1552422535-c45813c61732?w=400',
-    },
-    {
-        id: '6',
-        name: 'Zildjian A Custom Cymbal Pack',
-        category: 'Drums',
-        price: 999,
-        stock: 6,
-        description: 'Professional cymbal set featuring brilliant finish and cutting projection.',
-        image: 'https://images.unsplash.com/photo-1524230659092-07f99a75c013?w=400',
-    },
-    {
-        id: '7',
-        name: 'Martin D-28 Acoustic Guitar',
-        category: 'Guitars',
-        price: 3099,
-        stock: 2,
-        description: 'Premium dreadnought acoustic with solid Sitka spruce top and rosewood back.',
-        image: 'https://images.unsplash.com/photo-1550985616-10810253b84d?w=400',
-    },
-    {
-        id: '8',
-        name: 'Selmer Paris Alto Saxophone',
-        category: 'Wind',
-        price: 4200,
-        stock: 3,
-        description: 'Hand-crafted alto saxophone with warm tone and precise intonation.',
-        image: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400',
-    },
-    {
-        id: '9',
-        name: 'Fender Precision Bass',
-        category: 'Bass',
-        price: 1749,
-        stock: 5,
-        description: 'The original electric bass guitar — deep, punchy, and unmistakable.',
-        image: 'https://images.unsplash.com/photo-1612225330812-01a9c1b0d7ba?w=400',
-    },
-    {
-        id: '10',
-        name: 'Korg Minilogue XD Synthesizer',
-        category: 'Keyboards',
-        price: 649,
-        stock: 7,
-        description: 'Polyphonic analog synthesizer with digital multi-engine and effects.',
-        image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400',
-    },
-];
+/** Path to the external seed-data file */
+const SEED_DATA_PATH = '../data/instruments.json';
 
 /* ========================================================= */
 /*  Internal helpers                                          */
@@ -145,19 +53,29 @@ function _generateId() {
 }
 
 /* ========================================================= */
-/*  Seed (runs once)                                          */
+/*  Seed — loads data from external JSON on first visit       */
 /* ========================================================= */
 
-function _seedIfNeeded() {
-    if (!localStorage.getItem(DB_KEYS.INSTRUMENTS)) {
-        _write(DB_KEYS.INSTRUMENTS, SEED_INSTRUMENTS);
-    }
+/**
+ * Fetch the seed instruments from data/instruments.json and
+ * populate localStorage if the tables do not exist yet.
+ * Must be called (and awaited) once before using the DB.
+ */
+async function _seedIfNeeded() {
     if (!localStorage.getItem(DB_KEYS.USERS)) {
         _write(DB_KEYS.USERS, []);
     }
+    if (!localStorage.getItem(DB_KEYS.INSTRUMENTS)) {
+        try {
+            const response = await fetch(SEED_DATA_PATH);
+            const seedInstruments = await response.json();
+            _write(DB_KEYS.INSTRUMENTS, seedInstruments);
+        } catch (err) {
+            console.error('Failed to load seed data:', err);
+            _write(DB_KEYS.INSTRUMENTS, []);
+        }
+    }
 }
-
-_seedIfNeeded();
 
 /* ========================================================= */
 /*  Public DB-API                                             */
@@ -165,6 +83,14 @@ _seedIfNeeded();
 
 /** @namespace DB */
 const DB = {
+    /**
+     * Initialize the database (seed from external JSON if needed).
+     * Must be awaited once before the app starts.
+     */
+    async init() {
+        await _seedIfNeeded();
+    },
+
     /* ---------- Users ---------- */
 
     users: {
